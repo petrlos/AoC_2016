@@ -1,0 +1,12 @@
+#Advent of Code 2016: Day 19
+
+http://phoebe.inf.upol.cz/~krajca/magazin/reseni-01.pdf
+
+Pokud chceme nalézt řešení Josefova problému pro n osob, musíme nalézt největší mocninu dvou menší než n a od
+n ji odečíst. Rozdíl poté vynásobíme dvěma a přičteme k němu jedničku.
+
+n = 3004953
+
+2 ** 21 = 2097152
+
+(3004953 - 2097152) * 2 +1

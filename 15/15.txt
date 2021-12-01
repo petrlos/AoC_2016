@@ -1,0 +1,18 @@
+#1 has 17 positions; at time=0, it is at position 1.
+#2 has 7 positions; at time=0, it is at position 0.
+#3 has 19 positions; at time=0, it is at position 2.
+#4 has 5 positions; at time=0, it is at position 0.
+#5 has 3 positions; at time=0, it is at position 0.
+#6 has 13 positions; at time=0, it is at position 5.
+
+1. disk ma periodu otoceni 17 s offsetem 1 (pokud zmacknu v case 0, nez kapsle doleti k prvnimu disku, uplyne 1 sekunda
+2. disk ma periodu otoceni 7 s offsetem 2
+analogicky dalsi disky
+
+je potreba najit takovy cas, kdy vsechny disky maji 0 po zapocitani offsetu
+
+viz excel solution.xlsx
+
+task1: 317371
+
+task2: 2080951
