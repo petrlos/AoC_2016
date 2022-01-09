@@ -1,9 +1,8 @@
 #Advent of Code 2016: Day 14 Task 2
-#TODO: Day 14 Task2: first key working, last key not
-
 import hashlib
-import datetime
-start = datetime.datetime.now()
+import re
+from datetime import datetime
+startTimer = datetime.now()
 
 def generateHashWithIndex(starter, index):
     hash = starter + str(index)
@@ -11,36 +10,34 @@ def generateHashWithIndex(starter, index):
         hash = hashlib.md5(hash.encode()).hexdigest()
     return hash
 
-def checkKey(hash, endIndex):
-    triplets = "1,2,3,4,5,6,7,8,9,0,a,b,c,d,e,f".split(",")
-    for letter in triplets:
-        if letter*3 in hash:
-            for ind in range(endIndex-1000, endIndex):
-                if letter*5 in hashes[ind]:
-                    return True
+def checkKey(hash, start):
+    triplet = re.search(regTriplet, hash)
+    if triplet != None:
+        triplet = 5* triplet.group()[0]
+        for i in range(start+1, start+1001):
+            if triplet in hashes[i]:
+                return True
     return False
 
-salt = "abc"
+#MAIN:
+salt = "zpqevtbw"
+regTriplet = re.compile(r"(.)\1{2}")
 
+print("Generating first 1000 hashes:")
 hashes = []
 #start sequence - first 1000 hashes
-for index in range(1000):
+for index in range(1001):
     hashes.append(generateHashWithIndex(salt, index))
 
-
-
-index = 1000
+index = 1001
 keys = []
-while len(keys) < 65:
-    newHash = generateHashWithIndex(salt, index)
-    hashes.append(newHash)
+while len(keys) < 64:
+    hashes.append(generateHashWithIndex(salt, index))
     if checkKey(hashes[index-1000], index-1000):
-        keys.append(index)
-        print(index-1000, hashes[index-1000])
+        keys.append(index-1000)
+        if len(keys) % 6 == 0:
+            print(len(keys) // 6 * 10, "% done")
+    index += 1
 
-    index +=1
-
-print(keys[-1])
-
-
-print("Runtime:", datetime.datetime.now() - start)
+print("Result:", keys[-1])
+print("Runtime:", datetime.now() - startTimer)
