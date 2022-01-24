@@ -17,6 +17,7 @@ class Roomsetting():
         return result
 
     def roomFried(self):
+        #must content generator and different microchip to get fried
         for room in self.rooms:
             roomComplete = " ".join(room)
             for item in room:
@@ -31,12 +32,14 @@ class Roomsetting():
         return False
 
     def statusVisited(self):
+        #generates string to check state inkl. elevator position
         status = "el{0} ".format(self.elevator)
         for floor, room in enumerate(self.rooms):
             status += str(floor) + str(" ".join(sorted(room)))
         return status
 
     def possibleLoad(self):
+        #returns all possible loads depending on elevator position
         load = [[item] for item in self.rooms[self.elevator]]
         pairs = list(combinations(self.rooms[self.elevator], 2))
         for pair in pairs:
@@ -44,6 +47,7 @@ class Roomsetting():
         return load
 
     def finalState(self):
+        #room 3 = top floor has all elements
         if len(self.rooms[3]) == self.elementCount:
             return True
         else:
@@ -75,29 +79,29 @@ queue.append(start)
 
 visited = []
 winners = []
-while queue:
+while queue: #brute force BFS
     directions = [[1], [1,-1], [1,-1], [-1]] #which direction possible from which floor
     for _ in range(len(queue)):
         currentState = queue[0]
         possibleLoad = currentState.possibleLoad()
-        for direction in directions[currentState.elevator]:
-            for load in possibleLoad:
-                newState = deepcopy(currentState)
-                for item in load:
+        for direction in directions[currentState.elevator]: #up or down
+            for load in possibleLoad: #which load is possible
+                newState = deepcopy(currentState) #get new state as copy of current one
+                for item in load: #move elements along up/down
                     newState.rooms[newState.elevator].remove(item)
                     newState.rooms[newState.elevator + 1*direction].append(item)
-                newState.elevator += direction
+                newState.elevator += direction #move elevetor
                 statusVisited = newState.statusVisited()
-                if not newState.roomFried():
-                    if statusVisited not in visited:
+                if not newState.roomFried(): #room fried?
+                    if statusVisited not in visited: #not yet visited?
                         visited.append(statusVisited)
                         newState.counter += 1
-                        if newState.finalState():
+                        if newState.finalState(): #got you! :)
                             winners.append(newState.counter)
                             print("!!!!WINNER!!!!", newState.counter)
-                        else:
+                        else: #not winner? add to queue
                             queue.append(newState)
-    print(len(queue), len(visited))
-    queue.popleft()
+    print(len(queue), len(visited)) #loop checker
+    queue.popleft() #delete last state
 
 print("Winners", winners)
