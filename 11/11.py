@@ -2,7 +2,9 @@
 from itertools import combinations
 from collections import deque
 from copy import deepcopy
+from datetime import datetime
 import re
+timeStart = datetime.now()
 
 class Roomsetting():
     def __init__(self, rooms, elementCount):
@@ -10,32 +12,30 @@ class Roomsetting():
         self.counter = 0
         self.rooms = rooms
         self.elementCount = elementCount
+        self.visited = []
     def __str__(self):
-        result = "Elevator at: {0}".format(self.elevator) + "\n"
+        result = "Elevator at: {0}, steps: {1}".format(self.elevator + 1, self.counter) + "\n"
         for index in range(3,-1,-1):
-            result += "{0}: {1}".format(str(index), str(self.rooms[index])) + "\n"
+            result += "{0}: {1}".format(str(index+1), str(self.rooms[index])) + "\n"
+        for visited in self.visited:
+            result += visited + "\n"
         return result
 
     def roomFried(self):
-        #must content generator and different microchip to get fried
+        #if microchip is not protected with own generator, room is fried
         for room in self.rooms:
-            roomComplete = " ".join(room)
             for item in room:
-                element, type = item.split(" ")
-                if type == "generator":
-                    possibleMicrochip = "{0} microchip".format(element)
-                    if possibleMicrochip in roomComplete:
-                        roomComplete = roomComplete.replace(possibleMicrochip, "").replace(item, "")
-            if "generator" in roomComplete:
-                if "microchip" in roomComplete:
-                    return True
+                if "MC" in item:
+                    protectingGen = item.split(" ")[0] + " G" #corresponding generator
+                    if protectingGen not in room and "G" in " ".join(room):
+                        return True
         return False
 
     def statusVisited(self):
         #generates string to check state inkl. elevator position
-        status = "el{0} ".format(self.elevator)
+        status = "el{0} ".format(self.elevator+1)
         for floor, room in enumerate(self.rooms):
-            status += str(floor) + str(" ".join(sorted(room)))
+            status += "Fl:{1} {0} ".format(" ".join(sorted(room)), str(floor+1))
         return status
 
     def possibleLoad(self):
@@ -54,11 +54,11 @@ class Roomsetting():
             return False
 
 def parseData(lines):
-    reMicrochip = re.compile(r"\w+ microchip")
-    reGenerator = re.compile(r"\w+ generator")
+    reMicrochip = re.compile(r"\w+ MC")
+    reGenerator = re.compile(r"\w+ G")
     rooms = []
     for line in lines:
-        currentLine = line.replace("-compatible","")
+        currentLine = line.replace("-compatible","").replace("microchip", "MC").replace("generator","G")
         rooms.append(reMicrochip.findall(currentLine) + reGenerator.findall(currentLine))
     elements = set()
     for room in rooms:
@@ -67,41 +67,43 @@ def parseData(lines):
     start = Roomsetting(rooms, len(elements))
     return start
 
+def findWinner(start):
+    queue = deque()
+    queue.append(start)
+    visited = []
+    while queue:  # brute force BFS
+        directions = [[1], [1, -1], [1, -1], [-1]]  # which direction possible from which floor
+        currentState = queue[0]
+        possibleLoad = currentState.possibleLoad()
+        for direction in directions[currentState.elevator]:  # up or down
+            for load in possibleLoad:  # which load is possible
+                newState = deepcopy(currentState)  # get new state as copy of current one
+                for item in load:  # move elements along up/down
+                    newState.rooms[newState.elevator].remove(item)
+                    newState.rooms[newState.elevator + 1 * direction].append(item)
+                newState.elevator += direction  # move elevetor
+                statusVisited = newState.statusVisited()
+                if not newState.roomFried():  # room fried?
+                    if statusVisited not in visited:  # not yet visited?
+                        newState.visited.append(statusVisited)
+                        visited.append(statusVisited)
+                        newState.counter += 1
+                        if newState.finalState():  # got you! :)
+                            return newState
+                        else:  # not winner? add to queue
+                            queue.append(newState)
+            queue.popleft()  # delete last state
+        if len(visited) % 5000 == 0:
+            print("Nodes in queue: {0}, States checked: {1}, "
+                  "total runtime {2}".format(len(queue), len(visited), datetime.now()- timeStart))
+
 #MAIN
-with open("data.txt") as file:
+with open("test.txt") as file:
     lines = file.read().splitlines()
 
 start = parseData(lines)
+
 print(start)
-print("Let's roll:")
-queue = deque()
-queue.append(start)
 
-visited = []
-winners = []
-while queue: #brute force BFS
-    directions = [[1], [1,-1], [1,-1], [-1]] #which direction possible from which floor
-    for _ in range(len(queue)):
-        currentState = queue[0]
-        possibleLoad = currentState.possibleLoad()
-        for direction in directions[currentState.elevator]: #up or down
-            for load in possibleLoad: #which load is possible
-                newState = deepcopy(currentState) #get new state as copy of current one
-                for item in load: #move elements along up/down
-                    newState.rooms[newState.elevator].remove(item)
-                    newState.rooms[newState.elevator + 1*direction].append(item)
-                newState.elevator += direction #move elevetor
-                statusVisited = newState.statusVisited()
-                if not newState.roomFried(): #room fried?
-                    if statusVisited not in visited: #not yet visited?
-                        visited.append(statusVisited)
-                        newState.counter += 1
-                        if newState.finalState(): #got you! :)
-                            winners.append(newState.counter)
-                            print("!!!!WINNER!!!!", newState.counter)
-                        else: #not winner? add to queue
-                            queue.append(newState)
-    print(len(queue), len(visited)) #loop checker
-    queue.popleft() #delete last state
-
-print("Winners", winners)
+winner = findWinner(start)
+print(winner)
