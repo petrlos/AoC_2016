@@ -15,10 +15,27 @@ def simpleTask1(text):
             position += 1
     return counter
 
+def harderTask2(text):
+    totalWeight = 0
+    position = 0
+    charWeights = [1] * len(text)
+    while position < len(text):
+        if text[position] != "(":
+            totalWeight += charWeights[position]
+            position += 1
+        else:
+            marker = re.search(regex, text[position:]).group()
+            length, repeats = list(map(int, marker[1:-1].split("x")))
+            start = position + len(marker)
+            for i in range(start, start + length):
+                charWeights[i] *= repeats
+            position += len(marker)
+    return totalWeight
+
 #MAIN:
 with open("data.txt") as file:
     text = file.readline()
 regex = re.compile(r"\(\w+\)")
 
-
-print(simpleTask1(text))
+print("Task 1:", simpleTask1(text))
+print("Task 2:", harderTask2(text))
