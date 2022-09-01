@@ -12,7 +12,11 @@ with open("data.txt") as file:
 registers = {"a": 7, "b": 0, "c": 0, "d":0}
 print("Starting `a` at: ", registers["a"])
 position = 0
+iterations = 0
 while position < len(lines):
+    iterations += 1
+    if iterations % 500000 == 0:
+        print(iterations)
     currentLine =  lines[position].split(" ")
     if len(currentLine) == 3:
         instruction, what, where = currentLine
@@ -48,4 +52,7 @@ while position < len(lines):
     if "inc" in instruction:
         registers[where] += 1
 
+print(registers)
 print("Result Task1:", registers["a"])
+
+print("Task 2 result: 479009076 took about 1hr of time after 3,5bilions of iterations :) ")
