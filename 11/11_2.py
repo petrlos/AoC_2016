@@ -88,7 +88,8 @@ possibleDirections = [[+1], [-1, +1], [-1, +1], [-1]]
 loopcounter = 1
 while queue: #bfs
     if loopcounter % 10000 == 0:
-        print("{2} Loops: states visited: {0}; states in queue: {1}".format(len(visited), len(queue), loopcounter))
+        print("{2} Loops: states visited: {0}; states in queue: {1}, bfs depth: {3}".
+              format(len(visited), len(queue), loopcounter, int(queue[0][:3])))
     currentState = queue[0]
     elevatorLocation = int(currentState[4])
     currentFloor = triplets(currentState[5:].split("#")[elevatorLocation]) #from current state where elevator is
