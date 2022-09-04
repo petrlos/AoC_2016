@@ -1,7 +1,10 @@
 #Advent of Code 2016 Day 11 - 2nd try :)
 from collections import deque
 from itertools import combinations
+from datetime import datetime
 import re
+
+starttime = datetime.now()
 
 def sortFloorContent(roomStatus):
     #sorts room content alphabetically
@@ -42,10 +45,10 @@ def roomFried(roomState): #True = room is fried - not valid to be used in queue
 
 def getPossibleLoad(currentRoom):
     result = []
-    for item in currentRoom:
+    for item in currentRoom: #add all single items
         result.append([item])
-    possibleLoads = combinations(currentRoom, 2)
-    for load in possibleLoads:
+    possibleLoads = combinations(currentRoom, 2) #find all possible pairs
+    for load in possibleLoads: #and add them
         result.append(list(load))
     return result
 
@@ -55,35 +58,54 @@ def printState(state):
     for floor, room in enumerate(reversed(state[5:].split("#"))):
         print(4-floor, room)
 
-def getNewRoomState(currentState, load, direction):
-    #TODO: not working yet
-    newState = ""
-    return currentState
+def getNewRoomState(currentState, load, targetLocation): #location = new position of elevator
+    for item in load:
+        currentState = currentState.replace(item, "") #delete moved item from floor
+    floors = currentState[5:].split("#")
+    floors[targetLocation] += "".join(load) #replace load to new floor
+    counter = str(int(currentState[:3]) + 1).zfill(3) #increase counter by one
+    newState = counter + "#" + str(targetLocation) + "#".join(floors) #generate status properly
+    return sortFloorContent(newState) #return alphabetically sorted
+
+def checkAllOnTopFloor(roomState):
+    floors = roomState[5:].split("#")
+    for floor in floors[:-1]: #every floor except the last one must have the string length == 0
+        if len(floor) > 0:
+            return False
+    return True
 
 #MAIN
-with open("test.txt") as file:
+with open("data.txt") as file:
     lines = file.read().splitlines()
 
 start = parseData(lines)
 queue = deque([start])
-visited = [start[4:]]
+visited = set(start[4:])
 
 #which directions can elevator move - floor 0 only +1, floor 1 up and down etc
-possibleDirections = [[+1], [-1, +1], [-1, +1], [+1]]
+possibleDirections = [[+1], [-1, +1], [-1, +1], [-1]]
 
-while queue:
+loopcounter = 1
+while queue: #bfs
+    if loopcounter % 10000 == 0:
+        print("{2} Loops: states visited: {0}; states in queue: {1}".format(len(visited), len(queue), loopcounter))
     currentState = queue[0]
     elevatorLocation = int(currentState[4])
     currentFloor = triplets(currentState[5:].split("#")[elevatorLocation]) #from current state where elevator is
-    possibleLoad = getPossibleLoad(currentFloor)
+    possibleLoad = getPossibleLoad(currentFloor) #list of items, which could be moved
     for direction in possibleDirections[elevatorLocation]:
         for load in possibleLoad:
-            newState = getNewRoomState(currentState, load, direction)
-            if not roomFried(newState) and newState[4:] not in visited:
-                visited.append(newState[4:0])
-                queue.append(newState)
-
-
-    #TODO: check win - everything on top - print counter, queue = []
-
+            newState = getNewRoomState(currentState, load, elevatorLocation + direction) #new location
+            if checkAllOnTopFloor(newState):
+                result = int(newState[:3])
+                break
+            else:
+                if not roomFried(newState) and newState[4:] not in visited:
+                    visited.add(newState[4:])
+                    queue.append(newState)
+    loopcounter += 1
     queue.popleft()
+
+print(" ")
+print("Steps needed to replace all items to top floor:",result)
+print("Runtime:", datetime.now() - starttime)
